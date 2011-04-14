@@ -1,0 +1,45 @@
+!!! 5
+html(lang="en")
+  head
+    title=title
+
+    // Allow html5 to run on older browsers
+    script(type="text/javascript", src="52framework/js/modernizr-1.7.min.js")
+  
+    // 52 Framework CSS
+    link(rel="stylesheet", type="text/css", href="52framework/css/reset.css", media="screen")
+    link(rel="stylesheet", type="text/css", href="52framework/css/css3.css", media="screen") 
+    link(rel="stylesheet", type="text/css", href="52framework/css/general.css", media="screen")
+    link(rel="stylesheet", type="text/css", href="52framework/css/grid.css", media="screen")
+  
+    // JQuery UI CSS
+    link(rel="stylesheet", type="text/css", href="jquery/css/smoothness/jquery-ui-1.8.11.custom.css")
+    
+    // App CSS 
+    link(rel="stylesheet", type="text/css", href="css/main.css")
+  
+  
+    // Javascript
+    script(type="text/javascript", src="js/jade.js")
+    script(type="text/javascript", src="nowjs/now.js")
+    script(type="text/javascript", src="jquery/js/jquery-1.5.2.min.js")
+    script(type="text/javascript", src="jquery/js/jquery-ui-1.8.11.custom.min.js")
+  
+    // App Javascript
+    //script(type="text/javascript", src="js/navigation.js")
+
+  body
+
+    header.app_header.row
+      .logo.col_6.col Holy Chat!
+
+      nav.app_client_menu.horizontal.col_10.col
+        ul
+          li
+            a#login_menu(href="#login").menu_item &nbsp;
+      .clear
+
+  .app_main_content_container
+    !{body}
+
+  footer.app_footer.row Holy Chat! - 2011

@@ -1,0 +1,7 @@
+* Holy Chat!
+
+A very simples chat application written in Node.js, using express (with Jade template engine) and NowJS.
+
+The idea was to build a chat application using Socket.IO, but to avoid having to define my own (simple) protocol, I decided to try NowJS which makes it possible to call server functions from the client and vice versa, by means of (apparently) defining its own general protocol on top of Socket.IO.
+
+On the client, I used 52framework for the layout, Jquery and Jquery UI.

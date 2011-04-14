@@ -1,0 +1,95 @@
+/* App Header  */
+header.app_header {
+  padding-top: 25px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 0px;
+}
+
+header div.logo {
+  font-size: 3.52em;
+}
+
+/* App Client Menu */
+nav.app_client_menu {
+  top: 20px;
+  right: -10px;
+}
+
+nav.app_client_menu ul {
+  float: right !important;
+}
+
+nav.app_client_menu a {
+  border-right: 0 !important;
+}
+
+/* Default Horizontal Navigation */
+nav.horizontal ul li {
+  float:left; margin-top:12px;
+}
+
+nav.horizontal ul li a {
+  display:block;
+  padding:5px 15px;
+  border-right:1px solid #eee;
+  font-size:1.52em;
+  font-family:Georgia, "Times New Roman", Times, serif; text-decoration:none;
+}
+
+nav.horizontal ul li a:hover {
+  background-color:#eee;
+  border-right:1px solid #ccc;
+  text-shadow:-1px -1px 0px #fff;
+}
+
+nav.horizontal ul li.last a {
+  border-right:none;
+}
+
+/* App Menu */
+nav.app_menu {
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 12px;
+  margin-bottom: 10px;
+}
+
+nav.app_menu ul {
+  margin: 0;
+}
+
+/* App Main Content Container */
+.app_main_content_container {
+  min-height: 500px;
+}
+
+/* App Footer */
+footer.app_footer {
+  text-align:center;
+  color:#666;
+  font-size:0.9em;
+  padding:14px 0px;
+  margin-top: 30px;
+  border-top: 1px solid #ccc;
+}
+
+/* Page */
+.page {
+  display: none;
+}
+
+/* Others */
+
+h2 {
+  border-bottom:1px dashed #ccc; margin-top:15px;
+}
+
+
+/* App Style */
+#chat_room {
+  margin-top: 25px;
+  height: 480px;
+}
+
+#text {
+  width: 99%;
+}

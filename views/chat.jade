@@ -1,0 +1,80 @@
+#chat_room.row
+
+  #chat_conversations.col_12.col(style="height: 100%;")
+    .ui-widget-content.ui-corner-all(style="padding: 5px; height: 94%; overflow-y: scroll;")
+      ul
+
+  #chat_users.col_4.col.ui-widget(style="height: 100%;")
+    .ui-widget-header.ui-corner-top(style="border-bottom: 0; padding: 5px;") Usuários
+    .ui-widget-content.ui-corner-bottom(style="padding: 5px; height: 88%;")
+      ul
+
+.row
+
+  #chat_text.col_13.col
+    input(type='text', placeholder='Digite aqui sua mensagem')#text
+
+  #chat_controls.col_3.col
+    button(type='button')#send Enviar
+    button(type='button')#clear Limpar
+
+  script(type="text/javascript")
+    $(function() {
+      // Set focus on text input
+      $("#text").focus();
+  
+      // Prompt for user email
+      var name = '';
+      while(name === null || name === '') {
+        name = prompt('Qual seu email?', '');
+      }
+
+      // Set name
+      now.name = name
+
+      // Set name on page
+      $("#login_menu").html(name);
+
+      // User login functions
+      now.userJoin = function(name, newUser) {        
+        if(now.name === name && newUser === false) return;
+
+        $("<li data-name='" + name + "'></li>").text(name).appendTo("#chat_users ul");
+
+        if (newUser) {
+          $("<li></li>").text('Usuário ' + name + " entrou no chat").appendTo("#chat_conversations ul");
+        }
+      }
+
+      now.userLeave = function(name) {
+        $("li[data-name='" + name + "']").remove();
+        $("<li></li>").text('Usuário ' + name + " saiu do chat").appendTo("#chat_conversations ul");
+      }
+
+      // Messaging functions
+      now.receiveMessage = function(name, msg) {
+        $("<li></li>").text(name + ": " + msg).appendTo("#chat_conversations ul");
+      };
+       
+      function send() {
+        now.distributeMessage($('#text').val());
+        $('#text').val('');
+        $('#text').focus();
+      };
+
+      $("#send").click(send);
+      $("#text").keyup(function(e) {
+        if (e.keyCode === 13) {
+          send();
+        }
+      });
+
+      $("#clear").click(function() {
+        $("#text").val('');
+        $('#text').focus();
+      });
+
+
+    });
+    
+
