@@ -1,6 +1,6 @@
 var express = require('express');
 var jade = require('jade');
-var nowjs = require('now');
+var io = require('socket.io');
 
 // Express - Configure App
 var app = express.createServer();
@@ -17,7 +17,7 @@ app.configure(function() {
 // Express - Routes
 app.get('/', function(req, res) {
 
-  console.log("Rendering chat app");
+  console.log("Serving chat app");
 
   res.render('chat', {
     layout: 'chatLayout',
@@ -33,31 +33,49 @@ app.get('/', function(req, res) {
 app.listen(8080);
 console.log("Holy Chat Started on port %d", app.address().port);
 
-// Initialize NowJs
-var everyone = nowjs.initialize(app);
-console.log("NowJs Initialized");
+// Initialize Socket.IO
+var socket = io.listen(app);
 
-var users = [];
+socket.on('connection', function(client) {
 
-everyone.connected(function() {
-  for(var i=0; i< users.length; i++) {
-    everyone.now.userJoin(users[i], false);
-  }
+  client.on('message', function(data) {
+    console.log('Message received');
+    console.log(data);
 
-  everyone.now.userJoin(this.now.name, true);
-  users.push(this.now.name);
+    if (data.action === 'message') {
+      // set client email
+      data.email = client.email;
+
+      // broadcast message
+      socket.broadcast(data);
+
+    } else if (data.action === 'join') {
+      // set client email
+      client.email = data.email;
+
+      // set that this is a new user
+      data.newUser = true;
+
+      // broadcast joined message
+      socket.broadcast(data);
+
+      // send all other clients to the new user
+      for(var i in socket.clients) {
+        var c = socket.clients[i];
+
+        // Don't send duplicated message
+        if (c.email === client.email) return;
+
+        client.send({action: 'join', email: c.email, newUser: false});
+      }
+    }
+  });
+
+  client.on('disconnect', function() {
+    var data = {};
+    data.action = 'leave';
+    data.email = client.email;
+
+    client.broadcast(data);
+  });
 });
-
-everyone.disconnected(function() {
-  everyone.now.userLeave(this.now.name);
-
-  var i = users.indexOf(this.now.name);
-  if (i >= 0) {
-    users.splice(i, 1);
-  }
-});
-
-everyone.now.distributeMessage = function(msg) {
-  everyone.now.receiveMessage(this.now.name, msg);
-}
-
