@@ -6,28 +6,53 @@
 
   #chat_users.col_4.col.ui-widget(style="height: 100%;")
     .ui-widget-header.ui-corner-top(style="border-bottom: 0; padding: 5px;") Usuários
-    .ui-widget-content.ui-corner-bottom(style="padding: 5px; height: 88%;")
+    .ui-widget-content.ui-corner-bottom(style="padding: 5px; height: 88%; overflow-y: scroll;")
       ul
 
 .row
 
   #chat_text.col_13.col
-    input(type='text', placeholder='Digite aqui sua mensagem')#text
+    textarea(placeholder='Digite aqui sua mensagem')#text.ui-widget.ui-widget-content.ui-corner-all
 
   #chat_controls.col_3.col
     button(type='button')#send Enviar
     button(type='button')#clear Limpar
 
   script(type="text/javascript")
+    function toShortName(email) {
+      return email.substr(0, email.indexOf("@"));
+    }
+
+    function toGravatarUrl(email) {
+      var emailHash = hex_md5(email);
+      return "http://www.gravatar.com/avatar/" + emailHash + "?size=40&d=mm";
+    }
+
     $(function() {
-      // Set focus on text input
-      $("#text").focus();
+      // Text input
+      $("#text").focusin(function() {
+        $(this).addClass('ui-state-highlight');
+      }).focusout(function() {
+        $(this).removeClass('ui-state-highlight');
+      });
+
+      // Create buttons
+      $("#send").button();
+      $("#clear").button();
+
+      // Conversations auto scroll
+      $("#chat_conversations div").autoscroll({
+        step: 100
+      });
   
       // Prompt for user email
       var email = '';
       while(email === null || email === '') {
         email = prompt('Qual seu email?', '');
       }
+
+      // focus on text input
+      $("#text").focus();
 
       // Socket.io
       var socket = new io.Socket('localhost');
@@ -39,7 +64,7 @@
 
       socket.on('message', function(data) {
         if (data.action === 'message') {
-          $("<li></li>").text(data.email + ": " + data.message).appendTo("#chat_conversations ul");
+          $("<li style='display: none;'></li>").html("<img src='" + toGravatarUrl(data.email) + "' />" + "<span class='conversation_text'><b>" + toShortName(data.email) + "</b>: " + data.message + "</span>").appendTo("#chat_conversations ul").fadeIn();
 
         } else if (data.action === 'join') {
 
@@ -49,16 +74,16 @@
           }
 
           // Add email to users list
-          $("<li data-name='" + data.email + "'></li>").text(data.email).appendTo("#chat_users ul");
+          $("<li data-name='" + data.email + "'></li>").html("<img src='" + toGravatarUrl(data.email) + "' />" + toShortName(data.email)).appendTo("#chat_users ul");
   
           // If this is a new user who joinned, add a message about it
           if (data.newUser) {
-            $("<li></li>").text('Usuário ' + data.email + " entrou no chat").appendTo("#chat_conversations ul");
+            $("<li class='conversation_notice' style='display: none;'></li>").html('Usuário <b>' + toShortName(data.email) + "</b> entrou no chat").appendTo("#chat_conversations ul").fadeIn();
           }
 
         } else if (data.action === 'leave') {
           $("li[data-name='" + data.email + "']").remove();
-          $("<li></li>").text('Usuário ' + data.email + " saiu do chat").appendTo("#chat_conversations ul");
+          $("<li class='conversation_notice' style='display: none;'></li>").html('Usuário <b>' + toShortName(data.email) + "</b> saiu do chat").appendTo("#chat_conversations ul").fadeIn();
         }
       });
 

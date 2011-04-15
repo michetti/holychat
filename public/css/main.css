@@ -90,6 +90,40 @@ h2 {
   height: 480px;
 }
 
+#chat_conversations ul {
+  margin: 0;
+}
+
+#chat_conversations li {
+  padding: 5px 5px 0 5px;
+}
+
+#chat_conversations li img {
+  padding-right: 5px;
+}
+
+.conversation_text {
+  font-size: 1.1em;
+  display: block;
+  position: relative;
+  top: -45px;
+  margin-left: 50px;
+}
+
+.conversation_notice {
+  margin-bottom: 20px;
+}
+
+#chat_users ul {
+  margin: 0px;
+}
+
+#chat_users img {
+  padding-right: 5px;
+}
+
 #text {
-  width: 99%;
+  width: 98%;
+  padding: 5px;
+  
 }

@@ -3,7 +3,8 @@ var WebSocket = require('websocket-client').WebSocket;
 var utils = require('./utils.js');
 
 var testUserEmail = 'benchmark@gmail.com';
-var ws = new WebSocket('ws://173.203.127.245:8080/socket.io/websocket');
+var ws = new WebSocket('ws://localhost:8080/socket.io/websocket');
+//var ws = new WebSocket('ws://173.203.127.245:8080/socket.io/websocket');
 
 var joined = false;
 
