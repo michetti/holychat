@@ -1,6 +1,24 @@
 var express = require('express');
 var jade = require('jade');
 var io = require('socket.io');
+var os = require('os');
+var exec = require('child_process').exec;
+
+var getCpuCommand = "ps -p " + process.pid + " -u | grep " + process.pid;
+
+function printLog() {
+  var child = exec(getCpuCommand, function(error, stdout, stderr) {
+       var d = new Date();
+       var ts = d.getDay() + '/' + d.getMonth() + '/' + d.getFullYear() + ' ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
+
+      var s = stdout.split(/\s+/);
+      var cpu = s[2];
+      var memory = s[3];
+ 
+      console.log(ts + ',' + memory + ',' + cpu);
+  });
+}
+
 
 // Express - Configure App
 var app = express.createServer();
@@ -33,14 +51,19 @@ app.get('/', function(req, res) {
 app.listen(8080);
 console.log("Holy Chat Started on port %d", app.address().port);
 
+// Log cpu and memory utilization
+setInterval(function() {
+  printLog();
+}, 250);
+
 // Initialize Socket.IO
-var socket = io.listen(app);
+var socket = io.listen(app, {log: null});
 
 socket.on('connection', function(client) {
 
   client.on('message', function(data) {
-    console.log('Message received');
-    console.log(data);
+    //console.log('Message received');
+    //console.log(data);
 
     if (data.action === 'message') {
       // set client email

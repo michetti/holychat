@@ -36,7 +36,7 @@ function user() {
         setInterval(function() {
           tss.push(new Date());
           ws.send(utils.encode({action: 'message', message: generateRandomMessage()}));
-        }, 100);
+        }, 1000);
   
       } else if (data.action === 'message' && data.email === testUserEmail) { 
           var d = new Date();
@@ -45,6 +45,7 @@ function user() {
           var sended = tss.shift();
           var dt = d.getTime() - sended.getTime();
 
+          // time stamp, usuarios, tamanho mensagem, tempo resposta
           console.log(ts + ',' + users + ',' + payload.length + ',' + dt);
       }
     } else if (payload.substr(0, 3) === '~h~') {
@@ -53,7 +54,7 @@ function user() {
   }
 }
 
-for(var i=1; i<=50; i++) {
+for(var i=1; i<=100; i++) {
   console.log('creating user ' + i);
 
   setTimeout(function() {
