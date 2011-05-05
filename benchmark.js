@@ -46,7 +46,7 @@ function user() {
           var dt = d.getTime() - sended.getTime();
 
           // time stamp, usuarios, tamanho mensagem, tempo resposta
-          console.log(ts + ',' + users + ',' + payload.length + ',' + dt);
+          console.log(ts + ',' + users + ',' + ((payload.length * 2) - (testUserEmail.length + ",email:''".length)) + ',' + dt);
       }
     } else if (payload.substr(0, 3) === '~h~') {
       ws.send(utils.encode('~h~' + ++heartBeats));
@@ -54,8 +54,8 @@ function user() {
   }
 }
 
-for(var i=1; i<=100; i++) {
-  console.log('creating user ' + i);
+for(var i=1; i<=55; i++) {
+  //console.log('creating user ' + i);
 
   setTimeout(function() {
     user();
