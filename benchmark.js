@@ -24,6 +24,7 @@ function generateRandomMessage() {
 }
 
 function user() {
+  var userId = -1;
   var heartBeats = 0;
   var testUserEmail = null;
   var ws = new WebSocket('ws://localhost:8080/socket.io/websocket');
@@ -52,7 +53,7 @@ function user() {
           var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
   
           // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
-          console.log(ts + ',RECEIVE,' +  users + ',' + payload.length);
+          console.log(ts + ',' + userId + ',RECEIVE,' +  users + ',' + payload.length);
     
         } else if (data.action === 'join') {
 
@@ -76,7 +77,7 @@ function user() {
             var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
 
             // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
-            console.log(ts + ',SEND,' + users + ',' + m.length);
+            console.log(ts + ',' + userId + ',SEND,' + users + ',' + m.length);
 
             // send it
             ws.send(m);
@@ -89,7 +90,9 @@ function user() {
       }
 
     } else {
-      testUserEmail = 'user' + ++users + '@benchamrk.com';
+      userId = ++users;
+
+      testUserEmail = 'user' + userId + '@benchamrk.com';
       ws.send(utils.encode({action: 'join', email: testUserEmail}));
   
       joined = true;
