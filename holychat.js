@@ -6,6 +6,8 @@ var exec = require('child_process').exec;
 
 var getCpuCommand = "ps -p " + process.pid + " -u | grep " + process.pid;
 
+var usersConnected = 0;
+
 function printLog() {
   var child = exec(getCpuCommand, function(error, stdout, stderr) {
        var d = new Date();
@@ -15,7 +17,7 @@ function printLog() {
       var cpu = s[2];
       var memory = s[3];
  
-      console.log(ts + ',' + memory + ',' + cpu);
+      console.log(ts + ',' + usersConnected + ',' + memory + ',' + cpu);
   });
 }
 
@@ -60,6 +62,7 @@ setInterval(function() {
 var socket = io.listen(app, {log: null});
 
 socket.on('connection', function(client) {
+  usersConnected++;
 
   client.on('message', function(data) {
     //console.log('Message received');
@@ -98,6 +101,8 @@ socket.on('connection', function(client) {
     var data = {};
     data.action = 'leave';
     data.email = client.email;
+
+    usersConnected--;
 
     client.broadcast(data);
   });
