@@ -7,6 +7,9 @@ var exec = require('child_process').exec;
 var getCpuCommand = "ps -p " + process.pid + " -u | grep " + process.pid;
 
 var usersConnected = 0;
+var dtMessages = 0;
+var totalMessages = 0;
+
 
 function printLog() {
   var child = exec(getCpuCommand, function(error, stdout, stderr) {
@@ -17,7 +20,7 @@ function printLog() {
       var cpu = s[2];
       var memory = s[3];
  
-      console.log(ts + ',' + usersConnected + ',' + memory + ',' + cpu);
+      console.log(ts + ',' + usersConnected + ',' + memory + ',' + cpu + ',' + totalMessages + ',' + dtMessages);
   });
 }
 
@@ -51,12 +54,14 @@ app.get('/', function(req, res) {
 
 // Initialize http server
 app.listen(8080);
-console.log("Holy Chat Started on port %d", app.address().port);
+//console.log("Holy Chat Started on port %d", app.address().port);
 
 // Log cpu and memory utilization
 setInterval(function() {
   printLog();
-}, 250);
+  dtMessages = 0;
+  
+}, 1000);
 
 // Initialize Socket.IO
 var socket = io.listen(app, {log: null});
@@ -68,7 +73,12 @@ socket.on('connection', function(client) {
     //console.log('Message received');
     //console.log(data);
 
+
     if (data.action === 'message') {
+
+      dtMessages += (1 + usersConnected);
+      totalMessages += (1 + usersConnected);
+
       // set client email
       data.email = client.email;
 

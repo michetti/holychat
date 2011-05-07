@@ -2,7 +2,7 @@ var sys = require('sys');
 var WebSocket = require('websocket-client').WebSocket;
 var utils = require('./utils.js');
 
-var users = parseInt(process.argv[2]);
+var users = 0;
 
 var randomMessage = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's";
 
@@ -29,11 +29,10 @@ function user() {
   var ws = new WebSocket('ws://localhost:8080/socket.io/websocket');
   //var ws = new WebSocket('ws://173.203.127.245:8080/socket.io/websocket');
   
-  var tss = [];
   var joined = false;
 
   ws.onmessage = function(message) {
-    var d = new Date();
+
     var payload = utils.decode(message.data)[0];
   
     if (joined) {
@@ -49,19 +48,39 @@ function user() {
         }
 
         if (data.action == 'message') { 
+          var d = new Date();
           var ts = d.getDay() + '/' + d.getMonth() + '/' + d.getFullYear() + ' ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
   
-          var sended = tss.shift();
-          var dt = d.getTime() - sended.getTime();
-  
-          // time stamp, usuarios, tamanho mensagem, tempo resposta
-          console.log(ts + ',' + users + ',' + ((payload.length * 2) - (testUserEmail.length + 9)) + ',' + dt);
+          // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
+          console.log(ts + ',RECEIVE,' +  users + ',' + payload.length);
     
         } else if (data.action === 'join') {
 
-          setInterval(function() {
-            tss.push(new Date());
-            ws.send(utils.encode({action: 'message', message: generateRandomMessage()}));
+          // number of messages to send
+          var numberOfMessages = parseInt(process.argv[3]);
+
+          var si = setInterval(function() {
+
+            if (numberOfMessages == 0) {
+              clearInterval(si);
+              ws.close();
+              return;
+            }
+
+            numberOfMessages--;
+
+            // generate message
+            var m =  utils.encode({action: 'message', message: generateRandomMessage()})           
+
+            var d = new Date();
+            var ts = d.getDay() + '/' + d.getMonth() + '/' + d.getFullYear() + ' ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
+
+            // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
+            console.log(ts + ',SEND,' + users + ',' + m.length);
+
+            // send it
+            ws.send(m);
+
           }, 1000);
 
         }
@@ -78,10 +97,10 @@ function user() {
   }
 }
 
-for(var i=1; i<=parseInt(process.argv[3]); i++) {
+for(var i=1; i<=parseInt(process.argv[2]); i++) {
   //console.log('creating user ' + i);
 
   setTimeout(function() {
     user();
-  }, i * 1100);
+  }, i * 100);
 }
