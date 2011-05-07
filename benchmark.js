@@ -49,7 +49,7 @@ function user() {
 
         if (data.action == 'message') { 
           var d = new Date();
-          var ts = d.getDay() + '/' + d.getMonth() + '/' + d.getFullYear() + ' ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
+          var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
   
           // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
           console.log(ts + ',RECEIVE,' +  users + ',' + payload.length);
@@ -73,7 +73,7 @@ function user() {
             var m =  utils.encode({action: 'message', message: generateRandomMessage()})           
 
             var d = new Date();
-            var ts = d.getDay() + '/' + d.getMonth() + '/' + d.getFullYear() + ' ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
+            var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
 
             // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
             console.log(ts + ',SEND,' + users + ',' + m.length);

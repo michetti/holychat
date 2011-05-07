@@ -14,13 +14,15 @@ var totalMessages = 0;
 function printLog() {
   var child = exec(getCpuCommand, function(error, stdout, stderr) {
        var d = new Date();
-       var ts = d.getDay() + '/' + d.getMonth() + '/' + d.getFullYear() + ' ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
+       var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
 
       var s = stdout.split(/\s+/);
       var cpu = s[2];
       var memory = s[3];
  
       console.log(ts + ',' + usersConnected + ',' + memory + ',' + cpu + ',' + totalMessages + ',' + dtMessages);
+
+      dtMessages = 0;
   });
 }
 
@@ -59,7 +61,6 @@ app.listen(8080);
 // Log cpu and memory utilization
 setInterval(function() {
   printLog();
-  dtMessages = 0;
   
 }, 1000);
 
