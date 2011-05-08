@@ -49,36 +49,6 @@ function user() {
   
           // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
           console.log(ts + ',' + userId + ',RECEIVE,' +  users + ',' + payload.length);
-    
-        } else if (data.action === 'join' && data.email === testUserEmail) {
-
-          // number of messages to send
-          var numberOfMessages = parseInt(process.argv[3]);
-
-          var si = setInterval(function() {
-
-            if (numberOfMessages == 0) {
-              clearInterval(si);
-              ws.close();
-              return;
-            }
-
-            numberOfMessages--;
-
-            // generate message
-            var m =  utils.encode({action: 'message', message: generateRandomMessage()})           
-
-            var d = new Date();
-            var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
-
-            // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
-            console.log(ts + ',' + userId + ',SEND,' + users + ',' + m.length);
-
-            // send it
-            ws.send(m);
-
-          }, 1000);
-
         }
       } else if (type === '~h~') {
         ws.send(utils.encode('~h~' + ++heartBeats));
@@ -91,6 +61,33 @@ function user() {
       ws.send(utils.encode({action: 'join', email: testUserEmail}));
   
       joined = true;
+
+      // number of messages to send
+      var numberOfMessages = parseInt(process.argv[3]);
+
+      var si = setInterval(function() {
+
+        if (numberOfMessages == 0) {
+          clearInterval(si);
+          ws.close();
+          return;
+        }
+
+        numberOfMessages--;
+
+        // generate message
+        var m =  utils.encode({action: 'message', message: generateRandomMessage()})           
+
+        var d = new Date();
+        var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
+
+        // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
+        console.log(ts + ',' + userId + ',SEND,' + users + ',' + m.length);
+
+        // send it
+        ws.send(m);
+
+      }, 1000);
     }
   }
 }
