@@ -43,11 +43,6 @@ function user() {
 
         var data = JSON.parse(payload.substr(3));
 
-        if (data.email != testUserEmail) {
-          //console.log('discartando mensagem');
-          return;
-        }
-
         if (data.action == 'message') { 
           var d = new Date();
           var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
@@ -55,7 +50,7 @@ function user() {
           // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
           console.log(ts + ',' + userId + ',RECEIVE,' +  users + ',' + payload.length);
     
-        } else if (data.action === 'join') {
+        } else if (data.action === 'join' && data.email === testUserEmail) {
 
           // number of messages to send
           var numberOfMessages = parseInt(process.argv[3]);
@@ -105,5 +100,5 @@ for(var i=1; i<=parseInt(process.argv[2]); i++) {
 
   setTimeout(function() {
     user();
-  }, i * 100);
+  }, i * 1100);
 }
