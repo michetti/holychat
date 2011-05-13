@@ -18,20 +18,24 @@
     button(type='button')#send Enviar
     button(type='button')#clear Limpar
 
-  script(type="text/javascript")
+  script(type="text/javascript")i
+    // get only the beginning of the user email
     function toShortName(email) {
       return email.substr(0, email.indexOf("@"));
     }
 
+    // generate gravatar url from email
     function toGravatarUrl(email) {
       var emailHash = hex_md5(email);
       return "http://www.gravatar.com/avatar/" + emailHash + "?size=40&d=mm";
     }
 
     $(function() {
+
       // Text input
       $("#text").focusin(function() {
         $(this).addClass('ui-state-highlight');
+
       }).focusout(function() {
         $(this).removeClass('ui-state-highlight');
       });
@@ -90,7 +94,8 @@
       socket.on('disconnect', function() {
         alert('Você foi desconectado do servidor...');
       });
-      
+
+      // send a chat message
       function send() {
         socket.send({action: 'message', message: $('#text').val()});
         $('#text').val('');

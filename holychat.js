@@ -1,17 +1,27 @@
-var express = require('express');
-var jade = require('jade');
-var io = require('socket.io');
+// required modules
+var express = require('express'); // web framework
+var jade = require('jade'); // template framework
+var io = require('socket.io'); // websockets implementation
 var os = require('os');
-var exec = require('child_process').exec;
+var exec = require('child_process').exec; // used to call other system processes
 
+// command to read process consumed memory and cpu time
 var getCpuCommand = "ps -p " + process.pid + " -u | grep " + process.pid;
 
+// indicate the number of connected users
 var usersConnected = 0;
+
+// indicate the number of messages since last printed log
 var dtMessages = 0;
+
+// indicate the total number of messages
 var totalMessages = 0;
 
 
+// print the log used by the experiment
 function printLog() {
+
+  // call a system command (ps) to get current process resources utilization
   var child = exec(getCpuCommand, function(error, stdout, stderr) {
        var d = new Date();
        var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
@@ -19,9 +29,11 @@ function printLog() {
       var s = stdout.split(/\s+/);
       var cpu = s[2];
       var memory = s[3];
- 
+
+      // print log line 
       console.log(ts + ',' + usersConnected + ',' + memory + ',' + cpu + ',' + totalMessages + ',' + dtMessages);
 
+      // reset dt messages
       dtMessages = 0;
   });
 }
@@ -58,22 +70,26 @@ app.get('/', function(req, res) {
 app.listen(8080);
 //console.log("Holy Chat Started on port %d", app.address().port);
 
-// Log cpu and memory utilization
+
+// Log cpu and memory utilization every second
 setInterval(function() {
   printLog();
   
 }, 1000);
 
+
 // Initialize Socket.IO
 var socket = io.listen(app, {log: null});
 
+// Socket.IO handlers
 socket.on('connection', function(client) {
+
+  // increment number of connected users
   usersConnected++;
 
   client.on('message', function(data) {
     //console.log('Message received');
     //console.log(data);
-
 
     if (data.action === 'message') {
 
@@ -86,7 +102,9 @@ socket.on('connection', function(client) {
       // broadcast message
       socket.broadcast(data);
 
+
     } else if (data.action === 'join') {
+
       // set client email
       client.email = data.email;
 
