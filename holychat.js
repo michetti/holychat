@@ -1,7 +1,7 @@
 // required modules
 var express = require('express'); // web framework
 var jade = require('jade'); // template framework
-var io = require('socket.io'); // websockets implementation
+var socketIO = require('socket.io'); // websockets implementation
 var os = require('os');
 var exec = require('child_process').exec; // used to call other system processes
 
@@ -49,12 +49,11 @@ app.configure(function() {
   app.use(express.static(__dirname + '/public'));
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
   app.set('view engine', 'jade');
+  app.set('log level', 0);
 });
 
 // Express - Routes
 app.get('/', function(req, res) {
-
-  console.log("Serving chat app");
 
   res.render('chat', {
     layout: 'chatLayout',
@@ -66,11 +65,6 @@ app.get('/', function(req, res) {
 
 });
 
-// Initialize http server
-app.listen(8080);
-//console.log("Holy Chat Started on port %d", app.address().port);
-
-
 // Log cpu and memory utilization every second
 setInterval(function() {
   printLog();
@@ -79,60 +73,60 @@ setInterval(function() {
 
 
 // Initialize Socket.IO
-var socket = io.listen(app, {log: null});
+var io = socketIO.listen(app);
+
+// Socket.IO Reduce Log
+io.set('log level', 0);
+
+// Initialize http server
+app.listen(8080);
 
 // Socket.IO handlers
-socket.on('connection', function(client) {
+io.sockets.on('connection', function(socket) {
 
   // increment number of connected users
   usersConnected++;
 
-  client.on('message', function(data) {
-    //console.log('Message received');
-    //console.log(data);
-
-    if (data.action === 'message') {
-
-      dtMessages += (1 + usersConnected);
-      totalMessages += (1 + usersConnected);
-
-      // set client email
-      data.email = client.email;
-
-      // broadcast message
-      socket.broadcast(data);
-
-
-    } else if (data.action === 'join') {
-
-      // set client email
-      client.email = data.email;
-
-      // set that this is a new user
+  socket.on('join', function(data) {
+    socket.set('email', data.email, function() {
+      // send user joined event to everybody
       data.newUser = true;
+      io.sockets.emit('joined', data);
 
-      // broadcast joined message
-      socket.broadcast(data);
+      // send existing users to joined user
+      for(var i in io.sockets.sockets) {
+        var otherSocket = io.sockets.sockets[i];
 
-      // send all other clients to the new user
-      for(var i in socket.clients) {
-        var c = socket.clients[i];
+        otherSocket.get('email', function(err, otherEmail) {
 
-        // Don't send duplicated message
-        if (c.email === client.email) return;
+          // Don't send my own email
+          if (otherEmail === data.email) return;
 
-        client.send({action: 'join', email: c.email, newUser: false});
+          socket.emit('joined', {email: otherEmail, newUser: false});
+        });
       }
-    }
+    });
   });
 
-  client.on('disconnect', function() {
-    var data = {};
-    data.action = 'leave';
-    data.email = client.email;
+  socket.on('message', function(data) {
+    dtMessages += (1 + usersConnected);
+    totalMessages += (1 + usersConnected);
 
+    socket.get('email', function(err, email) {
+      // set client email
+      data.email = email;
+
+      // broadcast message to everybody
+      io.sockets.emit('message', data);
+    }); 
+  });
+
+  socket.on('disconnect', function() {
     usersConnected--;
 
-    client.broadcast(data);
+    socket.get('email', function(err, email) {
+      socket.broadcast.emit('leave', {email: email});
+    });
   });
+
 });

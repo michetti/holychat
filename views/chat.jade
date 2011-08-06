@@ -1,3 +1,5 @@
+script(type="text/javascript", src="/js/client.js")
+
 #chat_room.row
 
   #chat_conversations.col_12.col(style="height: 100%;")
@@ -10,107 +12,8 @@
       ul
 
 .row
-
-  #chat_text.col_13.col
     textarea(placeholder='Digite aqui sua mensagem')#text.ui-widget.ui-widget-content.ui-corner-all
 
   #chat_controls.col_3.col
     button(type='button')#send Enviar
     button(type='button')#clear Limpar
-
-  script(type="text/javascript")
-    // get only the beginning of the user email
-    function toShortName(email) {
-      return email.substr(0, email.indexOf("@"));
-    }
-
-    // generate gravatar url from email
-    function toGravatarUrl(email) {
-      var emailHash = hex_md5(email);
-      return "http://www.gravatar.com/avatar/" + emailHash + "?size=40&d=mm";
-    }
-
-    $(function() {
-
-      // Text input
-      $("#text").focusin(function() {
-        $(this).addClass('ui-state-highlight');
-
-      }).focusout(function() {
-        $(this).removeClass('ui-state-highlight');
-      });
-
-      // Create buttons
-      $("#send").button();
-      $("#clear").button();
-
-      // Conversations auto scroll
-      $("#chat_conversations div").autoscroll({
-        step: 100
-      });
-  
-      // Prompt for user email
-      var email = '';
-      while(email === null || email === '') {
-        email = prompt('Qual seu email?', '');
-      }
-
-      // focus on text input
-      $("#text").focus();
-
-      // Socket.io
-      var socket = new io.Socket('localhost');
-      socket.connect();
-
-      socket.on('connect', function() {
-        socket.send({action: 'join', email: email});
-      });
-
-      socket.on('message', function(data) {
-        if (data.action === 'message') {
-          $("<li style='display: none;'></li>").html("<img src='" + toGravatarUrl(data.email) + "' />" + "<span class='conversation_text'><b>" + toShortName(data.email) + "</b>: " + data.message + "</span>").appendTo("#chat_conversations ul").fadeIn();
-
-        } else if (data.action === 'join') {
-
-          if(data.email === email) {
-            // Set my email on page
-            $("#login_menu").html(data.email);
-          }
-
-          // Add email to users list
-          $("<li data-name='" + data.email + "'></li>").html("<img src='" + toGravatarUrl(data.email) + "' />" + toShortName(data.email)).appendTo("#chat_users ul");
-  
-          // If this is a new user who joinned, add a message about it
-          if (data.newUser) {
-            $("<li class='conversation_notice' style='display: none;'></li>").html('Usuário <b>' + toShortName(data.email) + "</b> entrou no chat").appendTo("#chat_conversations ul").fadeIn();
-          }
-
-        } else if (data.action === 'leave') {
-          $("li[data-name='" + data.email + "']").remove();
-          $("<li class='conversation_notice' style='display: none;'></li>").html('Usuário <b>' + toShortName(data.email) + "</b> saiu do chat").appendTo("#chat_conversations ul").fadeIn();
-        }
-      });
-
-      socket.on('disconnect', function() {
-        alert('Você foi desconectado do servidor...');
-      });
-
-      // send a chat message
-      function send() {
-        socket.send({action: 'message', message: $('#text').val()});
-        $('#text').val('');
-        $('#text').focus();
-      };
-
-      $("#send").click(send);
-      $("#text").keyup(function(e) {
-        if (e.keyCode === 13) {
-          send();
-        }
-      });
-
-      $("#clear").click(function() {
-        $("#text").val('');
-        $('#text').focus();
-      });
-    });
