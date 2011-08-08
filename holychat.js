@@ -84,10 +84,14 @@ app.listen(8080);
 // Socket.IO handlers
 io.sockets.on('connection', function(socket) {
 
+//console.log("Conectado");
+
   // increment number of connected users
   usersConnected++;
 
   socket.on('join', function(data) {
+    //console.log('Join: ' + data);
+
     socket.set('email', data.email, function() {
       // send user joined event to everybody
       data.newUser = true;
@@ -109,6 +113,8 @@ io.sockets.on('connection', function(socket) {
   });
 
   socket.on('message', function(data) {
+    //console.log('Message: ' + data);
+
     dtMessages += (1 + usersConnected);
     totalMessages += (1 + usersConnected);
 
