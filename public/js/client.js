@@ -48,7 +48,6 @@ $(function() {
 
 
   socket.on('connect', function() {
-    console.log("Conectado");
     socket.emit('join', {email: email});
   });
 

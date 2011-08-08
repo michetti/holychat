@@ -29,10 +29,11 @@ should.HTTPClient = HTTPClient;
  * @api publiC
  */
 
-function HTTPClient (port) {
+function HTTPClient (port, host) {
   this.port = port;
+  this.host = host;
   this.agent = new http.Agent({
-      host: 'localhost'
+      host: host
     , port: port
   });
 };
@@ -51,12 +52,12 @@ HTTPClient.prototype.request = function (path, opts, fn) {
 
   opts = opts || {};
   opts.agent = this.agent;
-  opts.host = 'localhost';
+  opts.host = this.host;
   opts.port = this.port;
   opts.path = path.replace(/{protocol}/g, io.protocol);
 
   opts.headers = opts.headers || {};
-  opts.headers.Host = 'localhost';
+  opts.headers.Host = this.host;
   opts.headers.Connection = 'keep-alive';
 
   var req = http.request(opts, function (res) {
@@ -191,13 +192,13 @@ create = function (cl) {
  * @api private
  */
 
-function WSClient (port, sid) {
+function WSClient (port, host, sid) {
   this.sid = sid;
   this.port = port;
 
   WebSocket.call(
       this
-    , 'ws://localhost:' + port + '/socket.io/' 
+    , 'ws://' + host + ':' + port + '/socket.io/' 
         + io.protocol + '/websocket/' + sid
   );
 };
@@ -239,6 +240,6 @@ WSClient.prototype.packet = function (pack) {
  * @api public
  */
 
-websocket = function (cl, sid) {
-  return new WSClient(cl.port, sid);
+websocket = function (cl, host, sid) {
+  return new WSClient(cl.port, host, sid);
 };

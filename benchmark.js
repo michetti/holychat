@@ -3,35 +3,55 @@ var sio = require('socket.io');
 var should = require('./common');
 var parser = sio.parser;
 
-// Number of parallel benchmark users
+var host = '127.0.0.1';
+var port = 8080;
 var users = 0;
 
-// String to generate random messages
-var randomMessage = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's";
+// Get parameters from commmand line
+if (process.argv[2] == 'help' || process.argv[2] == '?') {
+   console.log(' ');
+   console.log(' ');
+   console.log('Benchmark script Help');
+   console.log('---------------------');
+   console.log(' ');
+   console.log('usage: node benchmark.js (a) (b) (c) (d) (e) (f)'); 
+   console.log(' ');
+   console.log('  (a) - Number of users to spawn (one every 0,5 seconds until reach this number)');
+   console.log('  (b) - Number of messages to sent by each user before it quits the chat');
+   console.log('  (c) - Size of the messages the users will send in bytes');
+   console.log('  (d) - Time interval between messages when sending (miliseconds)');
+   console.log('  (e) - Time interval between getting messages from the server (miliseconds)');
+   console.log('  (f) - User behavior is regular or random - 0 for regular and 1 for random');
+   console.log(' ');
+   console.log(' ');
+   process.exit();
+} 
+var maxUsers = parseInt(process.argv[2]); 
+var maxMsgs = parseInt(process.argv[3]);
+var msgSize = parseInt(process.argv[4]); // in bytes
+var sendInterval = parseInt(process.argv[5]); // In miliseconds
+var receiveInterval = parseInt(process.argv[6]); // In miliseconds
+var randomBehavior = parseInt(process.argv[7]); // 0 for regular and 1 for random behavior when sendind messages
 
-// Random messages buffer (to improve peformance)
-var randomMessagesSize = 0;
-var randomMessages = [];
+var readyMessage = null
 
-// Funciton to generate (and buffer) random messages
-function generateRandomMessage() {
-  var extraSize = parseInt(Math.random() * 100);
-
-  // if the buffer is full, read from it, otherwise generate and buffer a new one
-  if (randomMessagesSize == 100) {
-    return randomMessages[extraSize];
-
-  } else {
-    var m = "Benchmark Message: " + randomMessage.substring(0, extraSize);
-    randomMessages.push(m);
-
-    return m;
-  }
+// Utility function that generate a msg messages
+function generateMessage() {
+    if (readyMessage != null) {
+        return readyMessage;
+    } else {
+        readyMessage = '';
+        for (var i = 0 ; i < msgSize ; i++) {
+            readyMessage += 'a';
+        }
+        return readyMessage;
+    }
 }
 
 // Each call to this function will generate a new user to benchmark the
 // WebSocket Chat Server
 function user() {
+
 
   // This user id
   var userId = -1;
@@ -41,14 +61,55 @@ function user() {
 
   var joined = false;
 
-  var cl = client(8080);
+  var cl = client(port, host);
   var ws;
 
   cl.handshake(function(sid) {
 
-    ws = websocket(cl, sid);
+    ws = websocket(cl, host, sid);
     
     ws.on('message', function(data) {
+
+      // function to send new messages
+      var sendMessage = function() {
+    
+        if (numberOfMessages == 0) {
+          ws.close();
+          cl.end();
+          return;
+        }
+    
+        // decrement the number of messages left
+        numberOfMessages--;
+    
+        // generate the message
+        var eventMessage =  parser.encodePacket({
+          type: 'event',
+          name: 'message',
+          endpoint: '',
+          args: [{'message': generateMessage()}]
+        });
+        //console.log(eventMessage);
+    
+        var d = new Date();
+        var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
+    
+        // print the log message that will be used on the experiment, format is:
+        // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
+        console.log(ts + ',' + userId + ',SEND,' + users + ',' + eventMessage.length);
+    
+        // send it
+        ws.send(eventMessage);
+    
+        if (randomBehavior) {
+          // Send a new message between 1 and 5 seconds
+          setTimeout(sendMessage, Math.floor(Math.random() * 4000) + 1000);
+        } else {
+          // Send a new message on a regular period of time
+          // defined by the CLI parameter
+          setTimeout(sendMessage, sendInterval);
+        }
+      }
 
       if (data.type === 'connect') {
         
@@ -72,6 +133,7 @@ function user() {
         if (joined && data.name === 'message') {
 
           var payload = parser.encodePacket(data);
+          //console.log(payload);
 
           var d = new Date();
           var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
@@ -85,45 +147,18 @@ function user() {
           joined = true;
 
           // number of messages to send
-          var numberOfMessages = parseInt(process.argv[3]);
-    
-          // this funciton will be called each second to send a generated message
-          // if will stop after the specified number of messages is reached
-          var si = setInterval(function() {
-    
-            // clear the setInterval if the number of messages was reached
-            if (numberOfMessages == 0) {
-              clearInterval(si);
-              ws.close();
-              cl.end();
-              return;
-            }
-    
-            // decrement the number of messages left
-            numberOfMessages--;
-    
-            // generate the message
-            var eventMessage =  parser.encodePacket({
-              type: 'event',
-              name: 'message',
-              endpoint: '',
-              args: [{'message': generateRandomMessage()}]
-            });
+          var numberOfMessages = maxMsgs;
 
-            var d = new Date();
-            var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
-    
-            // print the log message that will be used on the experiment, format is:
-            // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
-            console.log(ts + ',' + userId + ',SEND,' + users + ',' + eventMessage.length);
-    
-            // send it
-            ws.send(eventMessage);
-    
-          }, 1000);
-          
+          sendMessage();
         }
 
+      } else if (data.type === 'heartbeat') {
+        var heartBeatEvent = parser.encodePacket({
+          type: 'heartbeat',
+          endpoint: ''          
+        });
+
+        ws.send(heartBeatEvent);
       }
 
     });
@@ -137,6 +172,6 @@ for(var i=1; i<=parseInt(process.argv[2]); i++) {
   // Add one user every 1,1 seconds, so we don't fload the server
   setTimeout(function() {
     user();
-  }, i * 1100);
+  }, i * 100);
 
 }
