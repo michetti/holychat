@@ -81,6 +81,25 @@ io.set('log level', 0);
 // Initialize http server
 app.listen(8080);
 
+// Buffer messages to improve performance
+var messagesHandler = {
+  messages : [],
+
+  addMessage : function(message) {
+    this.messages.push(message);
+  },
+
+  sendMessages : function() {
+    if (this.messages.length <= 0) { return };
+
+    dtMessages += usersConnected;
+    totalMessages += usersConnected;
+
+    var copy = this.messages.splice(0);
+    io.sockets.emit('messages', {'messages': copy});
+  },
+};
+
 // Socket.IO handlers
 io.sockets.on('connection', function(socket) {
 
@@ -90,7 +109,6 @@ io.sockets.on('connection', function(socket) {
   usersConnected++;
 
   socket.on('join', function(data) {
-    //console.log('Join: ' + data);
 
     socket.set('email', data.email, function() {
       // send user joined event to everybody
@@ -100,6 +118,8 @@ io.sockets.on('connection', function(socket) {
       // send existing users to joined user
       for(var i in io.sockets.sockets) {
         var otherSocket = io.sockets.sockets[i];
+
+        if (otherSocket.disconnected) { continue; };
 
         otherSocket.get('email', function(err, otherEmail) {
 
@@ -115,15 +135,15 @@ io.sockets.on('connection', function(socket) {
   socket.on('message', function(data) {
     //console.log('Message: ' + data);
 
-    dtMessages += (1 + usersConnected);
-    totalMessages += (1 + usersConnected);
+    dtMessages++;
+    totalMessages++;
 
     socket.get('email', function(err, email) {
       // set client email
       data.email = email;
 
-      // broadcast message to everybody
-      io.sockets.emit('message', data);
+      // buffer messages
+      messagesHandler.addMessage(data);
     }); 
   });
 
@@ -136,3 +156,6 @@ io.sockets.on('connection', function(socket) {
   });
 
 });
+
+// start sending messages to clients
+setInterval(function () { messagesHandler.sendMessages() }, 500);

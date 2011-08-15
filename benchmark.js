@@ -130,7 +130,7 @@ function user() {
 
       } else if (data.type === 'event') {
 
-        if (joined && data.name === 'message') {
+        if (joined && data.name === 'messages') {
 
           var payload = parser.encodePacket(data);
           //console.log(payload);

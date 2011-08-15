@@ -15,6 +15,10 @@ function toGravatarUrl(email) {
   return "http://www.gravatar.com/avatar/" + emailHash + "?size=40&d=mm";
 }
 
+function newMessage(data) {
+  $("<li style='display: none;'></li>").html("<img src='" + toGravatarUrl(data.email) + "' />" + "<span class='conversation_text'><b>" + toShortName(data.email) + "</b>: " + data.message + "</span>").appendTo("#chat_conversations ul").fadeIn();
+}
+
 $(function() {
 
   // Text input
@@ -66,8 +70,11 @@ $(function() {
     }
   });
 
-  socket.on('message', function(data) {
-    $("<li style='display: none;'></li>").html("<img src='" + toGravatarUrl(data.email) + "' />" + "<span class='conversation_text'><b>" + toShortName(data.email) + "</b>: " + data.message + "</span>").appendTo("#chat_conversations ul").fadeIn();
+  socket.on('messages', function(data) {
+    for(var i in data.messages) {
+      var message = data.messages[i];
+      newMessage(message);
+    }
   });
 
   socket.on('leave', function(data) {
