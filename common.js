@@ -171,8 +171,8 @@ HTTPClient.prototype.handshake = function (opts, fn) {
  * @api private
  */
 
-client = function (port) {
-  return new HTTPClient(port);
+client = function (port, host) {
+  return new HTTPClient(port, host);
 };
 
 /**
