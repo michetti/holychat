@@ -69,7 +69,7 @@ app.get('/', function(req, res) {
 setInterval(function() {
   printLog();
   
-}, 1000);
+}, 500);
 
 
 // Initialize Socket.IO

@@ -172,6 +172,6 @@ for(var i=1; i<=parseInt(process.argv[2]); i++) {
   // Add one user every 1,1 seconds, so we don't fload the server
   setTimeout(function() {
     user();
-  }, i * 100);
+  }, i * 500);
 
 }
