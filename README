@@ -1,3 +1,6 @@
 * Holy Chat!
 
-A very simples chat application written in Node.js, using express (with Jade template engine) and Socket.IO. On the client side, I used 52framework for the layout, Jquery and Jquery UI.
+A very simples chat application written in Node.js, using express (with Jade template engine) and Socket.IO.
+On the client side, I used 52framework for the layout, Jquery and Jquery UI.
+
+Just clone and rum 'npm install -d'

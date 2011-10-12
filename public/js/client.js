@@ -44,7 +44,7 @@ $(function() {
   $("#text").focus();
 
   // Socket.io
-  var socket = io.connect('http://localhost');
+  var socket = io.connect('http://' + window.location.hostname);
 
 
   socket.on('connect', function() {

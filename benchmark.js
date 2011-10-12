@@ -1,7 +1,5 @@
 // import required modules
-var sio = require('socket.io');
-var should = require('./common');
-var parser = sio.parser;
+var io = require('socket.io-client');
 
 var host = '127.0.0.1';
 var port = 8080;
@@ -52,118 +50,79 @@ function generateMessage() {
 // WebSocket Chat Server
 function user() {
 
-
   // This user id
   var userId = -1;
 
   // This user email
   var testUserEmail = null;
 
-  var joined = false;
+  var socket = io.connect('http://' + host + ':' + port, {'force new connection': true});
 
-  var cl = client(port, host);
-  var ws;
-
-  cl.handshake(function(sid) {
-
-    ws = websocket(cl, host, sid);
-    
-    ws.on('message', function(data) {
-
-      // function to send new messages
-      var sendMessage = function() {
-    
-        if (numberOfMessages == 0) {
-          ws.close();
-          cl.end();
-          return;
-        }
-    
-        // decrement the number of messages left
-        numberOfMessages--;
-    
-        // generate the message
-        var eventMessage =  parser.encodePacket({
-          type: 'event',
-          name: 'message',
-          endpoint: '',
-          args: [{'message': generateMessage()}]
-        });
-        //console.log(eventMessage);
-    
-        var d = new Date();
-        var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
-    
-        // print the log message that will be used on the experiment, format is:
-        // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
-        console.log(ts + ',' + userId + ',SEND,' + users + ',' + eventMessage.length);
-    
-        // send it
-        ws.send(eventMessage);
-    
-        if (randomBehavior) {
-          // Send a new message between 1 and 5 seconds
-          setTimeout(sendMessage, Math.floor(Math.random() * 4000) + 1000);
-        } else {
-          // Send a new message on a regular period of time
-          // defined by the CLI parameter
-          setTimeout(sendMessage, sendInterval);
-        }
-      }
-
-      if (data.type === 'connect') {
-        
-        // increment the users count and stores the current user id
-        userId = ++users;
+  socket.on('connect', function() {
+    // increment the users count and stores the current user id
+    userId = ++users;
   
-        // gererate the user email
-        testUserEmail = 'user' + userId + '@benchamrk.com';
-  
-        // send the join event
-        var eventJoin = parser.encodePacket({
-          type: 'event',
-          name: 'join',
-          endpoint: '',
-          args: [{'email': testUserEmail}]
-        });
-        ws.send(eventJoin);
+    // gererate the user email
+    testUserEmail = 'user' + userId + '@benchamrk.com';
 
-      } else if (data.type === 'event') {
-
-        if (joined && data.name === 'message') {
-
-          var payload = parser.encodePacket(data);
-          //console.log(payload);
-
-          var d = new Date();
-          var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
-  
-          // generate log that will be used on the experiment, the format is:
-          // time stamp, SEND/RECEIVE, users, message length
-          console.log(ts + ',' + userId + ',RECEIVE,' +  users + ',' + payload.length);
-
-        } else if (!joined && data.name === 'joined' && data.args[0].email === testUserEmail) {
-
-          joined = true;
-
-          // number of messages to send
-          var numberOfMessages = maxMsgs;
-
-          sendMessage();
-        }
-
-      } else if (data.type === 'heartbeat') {
-        var heartBeatEvent = parser.encodePacket({
-          type: 'heartbeat',
-          endpoint: ''          
-        });
-
-        ws.send(heartBeatEvent);
-      }
-
-    });
-
+    // send the join event
+    socket.emit('join', {'email': testUserEmail });
   });
+
+  socket.on('joined', function(data) {
+    if (data.email !== testUserEmail) {
+      return;
+    }
+
+    // number of messages to send
+    var numberOfMessages = maxMsgs;
+
+    // function to send new messages
+    var sendMessage = function() {
+    
+      if (numberOfMessages == 0) {
+        users--;
+        socket.disconnect();
+        return;
+      }
+    
+      // decrement the number of messages left
+      numberOfMessages--;
+    
+      var d = new Date();
+      var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
+    
+      // print the log message that will be used on the experiment, format is:
+      // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
+      // TODO calcular o tamanho do payload
+      console.log(ts + ',' + userId + ',SEND,' + users + ',' + 100);
+    
+      // send it
+      socket.emit('message', {'message': generateMessage()});
+    
+      if (randomBehavior) {
+        // Send a new message between 1 and 5 seconds
+        setTimeout(sendMessage, Math.floor(Math.random() * 4000) + 1000);
+      } else {
+        // Send a new message on a regular period of time
+        // defined by the CLI parameter
+        setTimeout(sendMessage, sendInterval);
+      }
+    }
+
+    sendMessage();
+  });
+
+  socket.on('message', function() {
+    var d = new Date();
+    var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
+  
+    // generate log that will be used on the experiment, the format is:
+    // time stamp, SEND/RECEIVE, users, message length
+    // TODO get payload size
+    console.log(ts + ',' + userId + ',RECEIVE,' +  users + ',' + 100);
+  });
+
 }
   
 // This function will create as many parallel users as specified on parameters
