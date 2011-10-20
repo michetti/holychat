@@ -1,5 +1,5 @@
 // import required modules
-var io = require('socket.io-client');
+var io = require('socket.io-client-benchmark');
 
 var host = '127.0.0.1';
 var port = 8080;
@@ -12,7 +12,7 @@ if (process.argv[2] == 'help' || process.argv[2] == '?') {
    console.log('Benchmark script Help');
    console.log('---------------------');
    console.log(' ');
-   console.log('usage: node benchmark.js (a) (b) (c) (d) (e) (f)'); 
+   console.log('usage: node benchmark.js (a) (b) (c) (d) (e) (f) (g)'); 
    console.log(' ');
    console.log('  (a) - Number of users to spawn (one every 0,5 seconds until reach this number)');
    console.log('  (b) - Number of messages to sent by each user before it quits the chat');
@@ -20,6 +20,7 @@ if (process.argv[2] == 'help' || process.argv[2] == '?') {
    console.log('  (d) - Time interval between messages when sending (miliseconds)');
    console.log('  (e) - Time interval between getting messages from the server (miliseconds)');
    console.log('  (f) - User behavior is regular or random - 0 for regular and 1 for random');
+   console.log('  (g) - Socket.IO transport to use (websocket or xhr-polling)');
    console.log(' ');
    console.log(' ');
    process.exit();
@@ -30,6 +31,67 @@ var msgSize = parseInt(process.argv[4]); // in bytes
 var sendInterval = parseInt(process.argv[5]); // In miliseconds
 var receiveInterval = parseInt(process.argv[6]); // In miliseconds
 var randomBehavior = parseInt(process.argv[7]); // 0 for regular and 1 for random behavior when sendind messages
+var transport = process.argv[8];
+
+// Sum message and email sizes on your code
+var sizes = {
+  'websocket': {
+    'send': '5:::{"name":"message","args":[{"message":""}]}'.length,
+    'receive': '5:::{"name":"message","args":[{"message":"","email":""}]}'.length,
+    'noop': 0
+  },
+  'xhr-polling': {
+    'send': ('' +
+        'POST /socket.io/1/xhr-polling/12643751301538141714?t=1318986727328 HTTP/1.1' +
+        'Host: 192.168.56.101:8080' +
+        'Connection: keep-alive' +
+        'Content-Length: 53' +
+        'Origin: http://192.168.56.101:8080' +
+        'User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/14.0.835.202 Safari/535.1' +
+        'Content-type: text/plain;charset=UTF-8' +
+        'Accept: */*' +
+        'Referer: http://192.168.56.101:8080/' +
+        'Accept-Encoding: gzip,deflate,sdch' +
+        'Accept-Language: pt-BR,en;q=0.8,en-US;q=0.6' +
+        'Accept-Charset: UTF-8,*;q=0.5' +
+        '5:::{"name":"message","args":[{"message":""}]}' +
+        'HTTP/1.1 200 OK' +
+        'Content-Length: 1' +
+        'Access-Control-Allow-Origin: *' +
+        'Connection: keep-alive' +
+        '1').length,
+    'receive': ('' +
+        'GET /socket.io/1/xhr-polling/12643751301538141714?t=1318986712403 HTTP/1.1' +
+        'Host: 192.168.56.101:8080' +
+        'Connection: keep-alive' +
+        'User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/14.0.835.202 Safari/535.1' +
+        'Accept: */*' +
+        'Referer: http://192.168.56.101:8080/' +
+        'Accept-Encoding: gzip,deflate,sdch' +
+        'Accept-Language: pt-BR,en;q=0.8,en-US;q=0.6' +
+        'Accept-Charset: UTF-8,*;q=0.5' +
+        'HTTP/1.1 200 OK' +
+        'Content-Type: text/plain; charset=UTF-8' +
+        'Content-Length: 84' +
+        'Connection: Keep-Alive' +
+        '5:::{"name":"message","args":[{"message":"","email":""}]}').length,
+    'noop': ('' +
+        'GET /socket.io/1/xhr-polling/12643751301538141714?t=1318986652368 HTTP/1.1' +
+        'Host: 192.168.56.101:8080' +
+        'Connection: keep-alive' +
+        'User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/14.0.835.202 Safari/535.1' +
+        'Accept: */*' +
+        'Referer: http://192.168.56.101:8080/' +
+        'Accept-Encoding: gzip,deflate,sdch' +
+        'Accept-Language: pt-BR,en;q=0.8,en-US;q=0.6' +
+        'Accept-Charset: UTF-8,*;q=0.5' +
+        'HTTP/1.1 200 OK' +
+        'Content-Type: text/plain; charset=UTF-8' +
+        'Content-Length: 3' +
+        'Connection: Keep-Alive' +
+        '8::').length
+  }
+}
 
 var readyMessage = null
 
@@ -56,7 +118,9 @@ function user() {
   // This user email
   var testUserEmail = null;
 
-  var socket = io.connect('http://' + host + ':' + port, {'force new connection': true});
+  var socket = io.connect('http://' + host + ':' + port, {
+    'force new connection': true,
+  });
 
   socket.on('connect', function() {
     // increment the users count and stores the current user id
@@ -94,11 +158,13 @@ function user() {
     
       // print the log message that will be used on the experiment, format is:
       // time stamp, SEND/RECEIVE, usuarios, tamanho mensagem
-      // TODO calcular o tamanho do payload
-      console.log(ts + ',' + userId + ',SEND,' + users + ',' + 100);
+      var message = generateMessage();
+      var size = sizes[transport].send + message.length;
+
+      console.log(ts + ',' + userId + ',SEND,' + users + ',' + size);
     
       // send it
-      socket.emit('message', {'message': generateMessage()});
+      socket.emit('message', {'message': message});
     
       if (randomBehavior) {
         // Send a new message between 1 and 5 seconds
@@ -113,18 +179,28 @@ function user() {
     sendMessage();
   });
 
-  socket.on('message', function() {
+  socket.on('message', function(data) {
     var d = new Date();
     var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
   
     // generate log that will be used on the experiment, the format is:
     // time stamp, SEND/RECEIVE, users, message length
-    // TODO get payload size
-    console.log(ts + ',' + userId + ',RECEIVE,' +  users + ',' + 100);
+    var size = sizes[transport].receive + data.message.length + data.email.length;
+    console.log(ts + ',' + userId + ',RECEIVE,' +  users + ',' + size);
   });
 
 }
-  
+ 
+// Log Noop Messages
+// On XHR Polling, if the polling timeout is reached, the connection will be terminated
+// and a new one will be opened
+io.parser.benchmarkEventEmitter.on('noop', function() {
+  var d = new Date();
+  var ts = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + ':' + d.getMilliseconds();
+
+  console.log(ts + ',' + 'NOOP' + ',RECEIVE,' +  users + ',' + sizes[transport].noop);
+});
+ 
 // This function will create as many parallel users as specified on parameters
 for(var i=1; i<=parseInt(process.argv[2]); i++) {
 

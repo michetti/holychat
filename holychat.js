@@ -68,12 +68,18 @@ app.get('/', function(req, res) {
 // Log cpu and memory utilization every second
 setInterval(function() {
   printLog();
-  
 }, 500);
 
 
 // Initialize Socket.IO
 var io = socketIO.listen(app);
+
+var singleTransport = process.argv[2];
+if (singleTransport) {
+  io.configure(function() {
+    io.set('transports', [singleTransport]);
+  });
+}
 
 // Socket.IO Reduce Log
 io.set('log level', 0);

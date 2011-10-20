@@ -3,4 +3,18 @@
 A very simples chat application written in Node.js, using express (with Jade template engine) and Socket.IO.
 On the client side, I used 52framework for the layout, Jquery and Jquery UI.
 
-Just clone and rum 'npm install -d'
+We are currently using this application to benchmark WebSocket vs Commet:
+1) Clone project socket.io-client-benchmark
+2) On it's folder, 'npm link' (as root)
+3) Clone this project
+4) On it's folder, 'npm install -d', and then 'npm link socket.io-client-benchmark'
+
+Run the server: node holychat.js [transport]
+* if a transport is specified, only that transport will be used.
+* see socket.io client for available transports
+
+Run the bencharm script: 'node benchmark.js 20 100 100 1000 0 0 websocket'
+* run 'node benchmark.js help' for currently available parameters
+* also, only websocket and xhr-polling transports are implemented
+
+This is at a very early stage, so nothing is garanteed to work.
